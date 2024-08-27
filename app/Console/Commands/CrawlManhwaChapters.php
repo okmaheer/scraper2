@@ -32,19 +32,19 @@ class CrawlManhwaChapters extends Command
             $this->info("{$manhwa->id} Checking for new chapters for: {$manhwa->name}");
 
             // Check Manhwaclan
-            if (!empty($manhwa->manhwaclan_link)) {
-                $this->checkChapters($manhwa, $manhwa->manhwaclan_link, 'manhwaclan');
-            } else {
-                Log::info("{$manhwa->id} No Manhwaclan link for: {$manhwa->name}");
-                $this->info("{$manhwa->id} No Manhwaclan link for: {$manhwa->name}");
-            }
+            // if (!empty($manhwa->manhwaclan_link)) {
+            //     $this->checkChapters($manhwa, $manhwa->manhwaclan_link, 'manhwaclan');
+            // } else {
+            //     Log::info("{$manhwa->id} No Manhwaclan link for: {$manhwa->name}");
+            //     $this->info("{$manhwa->id} No Manhwaclan link for: {$manhwa->name}");
+            // }
             // Check Manhuafast
-            if (!empty($manhwa->asuracomic_link)) {
-                $this->checkChapters($manhwa, $manhwa->asuracomic_link, 'asuracomic');
-            } else {
-                Log::info("{$manhwa->id} No Asuracomic link for: {$manhwa->name}");
-                $this->info("{$manhwa->id} No Asuracomic link for: {$manhwa->name}");
-            }
+            // if (!empty($manhwa->asuracomic_link)) {
+            //     $this->checkChapters($manhwa, $manhwa->asuracomic_link, 'asuracomic');
+            // } else {
+            //     Log::info("{$manhwa->id} No Asuracomic link for: {$manhwa->name}");
+            //     $this->info("{$manhwa->id} No Asuracomic link for: {$manhwa->name}");
+            // }
             // // Check Manhuafast
             // if (!empty($manhwa->mgdemon_link)) {
             //     $this->checkChapters($manhwa, $manhwa->mgdemon_link, 'mgdemon');
@@ -53,12 +53,12 @@ class CrawlManhwaChapters extends Command
             //     $this->info("{$manhwa->id} No MGdemon link for: {$manhwa->name}");
             // }
             // Check Manhuafast
-            if (!empty($manhwa->manhwafast_link)) {
-                $this->checkChapters($manhwa, $manhwa->manhwafast_link, 'manhuafast');
-            } else {
-                Log::info("{$manhwa->id} No Manhuafast link for: {$manhwa->name}");
-                $this->info("{$manhwa->id} No Manhuafast link for: {$manhwa->name}");
-            }
+            // if (!empty($manhwa->manhwafast_link)) {
+            //     $this->checkChapters($manhwa, $manhwa->manhwafast_link, 'manhuafast');
+            // } else {
+            //     Log::info("{$manhwa->id} No Manhuafast link for: {$manhwa->name}");
+            //     $this->info("{$manhwa->id} No Manhuafast link for: {$manhwa->name}");
+            // }
 
 
             if (!empty($manhwa->tecnoscans_link)) {
@@ -225,8 +225,8 @@ class CrawlManhwaChapters extends Command
         }
         if (count($chapters) !== Chapter::where('manhwa_id', $manhwa->id)->count()) {
             if ($source == 'tecnoscans') {
-                $this->mergeChapters($manhwa, $chapters, $source);
-            } else {
+                // $this->mergeChapters($manhwa, $chapters, $source);
+            // } else {
                 foreach ($chapters as $chapter) {
                     $chapterUrl = $chapter['url'];
                     $chapterNumber = $chapter['number'];

@@ -88,7 +88,7 @@ class FetchChapterImages extends Command
                 }));
             }
             else if($chapter->source == 'tecnoscans') {
-                $images = $this->fetchImagesWithPuppeteer(array_reverse(json_decode($chapter->link)));
+                $images = $this->fetchImagesWithPuppeteer([$chapter->link]);
             }
             if (empty($images)) {
                 Log::info("No images found for chapter URL: {$chapter->link}");
@@ -135,11 +135,12 @@ class FetchChapterImages extends Command
         }
     
     }
-    protected function fetchImagesWithPuppeteer(array $urls)
+    protected function fetchImagesWithPuppeteer($urls)
     {
         $nodeScript = base_path('scripts/fetchImages.cjs'); // Adjust the path to your Node.js script
         $urlsArg = escapeshellarg(base64_encode(json_encode($urls)));
         $command = "node $nodeScript $urlsArg";
+
         $output = shell_exec($command);
         $images = json_decode($output, true);
     
