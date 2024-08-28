@@ -95,12 +95,15 @@ class CrawlManhwaChapters extends Command
             // } else if ($source == 'manhwaclan') {
             //     $script = 'fetch_chapters_manhwaclan.cjs';
             // }
+            //dd($manhwa)
             if ($manhwa->deep_check && $source == 'tecnoscans') {
+               // dd($manhwa);
                 Log::info("{$manhwa->id} deep checking for chapters...");
 
                 $script = 'fetch_deep_check_chapters_tecnoscans.cjs';
                 $url = Chapter::where('manhwa_id', $manhwa->id)->where('source', 'tecnoscans')->first()->link;
-                $url = json_decode($url)[0];
+                
+                $url = $url;
             }
 
             // Log the command being executed
