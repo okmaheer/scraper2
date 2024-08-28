@@ -405,7 +405,7 @@ class CrawlManhwaChapters extends Command
                                 "date_gmt" => Carbon::now()->format('Y-m-d H:i:s'),
                                 "chapter_index" => 0,
                                 "chapter_seo" => null,
-                                "chapter_seo" => 'https://manhuacollection.com/manga/'.Str::slug($manhwa2->name).'/'.$slug,
+                                "chapter_seo" => 'https://manhuacollection.com/manga/'.Str::slug($manhwa2->name).'/'.$slug.'-1',
                                 "chapter_status" => 1,
                                 "chapter_metas" => ""
                             ];
