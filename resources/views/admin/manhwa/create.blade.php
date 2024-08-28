@@ -125,6 +125,19 @@
                         </div>
                     </div>
                 </div>
+                <div class="row g-9 mb-8">
+                    <div class="col-md-6">
+                        <!--begin::Label-->
+                        <label class="d-flex align-items-center fs-6 fw-bold mb-2">
+                            <span class="required">2nd Post ID</span>
+                        </label>
+                        <!--end::Label-->
+                        <input type="number" class="form-control form-control-solid required" placeholder="Enter ID" name="post_id_2" />
+
+                    </div>
+
+
+                </div>
 
            
 

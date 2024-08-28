@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use GuzzleHttp\Client;
+use Illuminate\Support\Facades\DB;
 
 class CrawlManhwaChapters extends Command
 {
@@ -75,6 +76,7 @@ class CrawlManhwaChapters extends Command
     }
 
     protected function checkChapters($manhwa, $url, $source)
+
     {
         $htmlContent = $this->httpClient->get($url)->getBody()->getContents();
         $crawler = new \Symfony\Component\DomCrawler\Crawler($htmlContent);
@@ -267,13 +269,23 @@ class CrawlManhwaChapters extends Command
                                 "chapter_index" => 0,
                                 "chapter_seo" => null,
                                 "chapter_warning" => null,
-                                "chapter_status" => 0,
+                                "chapter_status" => 1,
                                 "chapter_metas" => ""
                             ];
                             $Wpchapter = WpMangaChapter::create($chapterData);
                             $chapter->wp_chapter_id = $Wpchapter->id;
                             $chapter->save();
+                    
                         }
+                        $manhwa2 = DB::connection('mysql2')->table('manhwas')->where('post_Id',$manhwa->post_id_2)->first();
+                        $chapter2 = DB::connection('mysql2')->table('chapters')->where('manhwa_id',$manhwa2->id)->where('chapter_number',(int) floatval($chapterNumber))->first();
+                        if(!$chapter2){
+                        $this->handleSecondaryChapter($manhwa,$chapter,$manhwa2,$chapter2,$chapterUrl,(int) floatval($chapterNumber));
+                        Log::info("{$manhwa2->name} Added Secondary chapter {$chapterNumber} from {$source}.");
+                        $this->info("{$manhwa2->name} Added Secondary chapter {$chapterNumber} from {$source}.");
+                          }
+               
+                        
                         Log::info("{$manhwa->id} Added new chapter {$chapterNumber} from {$source}.");
                         $this->info("{$manhwa->id} Added new chapter {$chapterNumber} from {$source}.");
                     }
@@ -284,81 +296,126 @@ class CrawlManhwaChapters extends Command
             $this->info("{$manhwa->id} No new chapters found for {$manhwa->name} ({$source}).");
         }
     }
-    public function mergeChapters($manhwa, $chapters, $source)
-    {
-        $mergedChapters = [];
+    // public function mergeChapters($manhwa, $chapters, $source)
+    // {
+    //     $mergedChapters = [];
 
-        foreach ($chapters as $chapter) {
-            $chapterUrl = $chapter['url'];
-            $chapterNumber = $chapter['number'];
-            $baseChapterNumber = (int)floor($chapterNumber);
-            // $this->info($baseChapterNumber);
+    //     foreach ($chapters as $chapter) {
+    //         $chapterUrl = $chapter['url'];
+    //         $chapterNumber = $chapter['number'];
+    //         $baseChapterNumber = (int)floor($chapterNumber);
+    //         // $this->info($baseChapterNumber);
 
-            // Skip chapters below the starting limit
-            if (floatval($chapterNumber) < $manhwa->starting_limit) {
-                $this->info("{$manhwa->id} Skipping chapter {$chapterNumber} from {$source} due to starting limit.");
-                continue;
-            }
+    //         // Skip chapters below the starting limit
+    //         if (floatval($chapterNumber) < $manhwa->starting_limit) {
+    //             $this->info("{$manhwa->id} Skipping chapter {$chapterNumber} from {$source} due to starting limit.");
+    //             continue;
+    //         }
 
-            // Merge URLs by base chapter number
-            if (!isset($mergedChapters[$baseChapterNumber])) {
-                $mergedChapters[$baseChapterNumber] = [
-                    'number' => $baseChapterNumber,
-                    'url' => []
-                ];
-            }
+    //         // Merge URLs by base chapter number
+    //         if (!isset($mergedChapters[$baseChapterNumber])) {
+    //             $mergedChapters[$baseChapterNumber] = [
+    //                 'number' => $baseChapterNumber,
+    //                 'url' => []
+    //             ];
+    //         }
 
-            $mergedChapters[$baseChapterNumber]['url'][] = $chapterUrl;
-        }
-        $this->info(json_encode($mergedChapters));
+    //         $mergedChapters[$baseChapterNumber]['url'][] = $chapterUrl;
+    //     }
+    //     $this->info(json_encode($mergedChapters));
 
-        // Process merged chapters
-        foreach ($mergedChapters as $chapter) {
-            $chapter['url'] = json_encode($chapter['url']);
-            $this->info("{$manhwa->id} Processing chapter {$chapter['number']} from {$source}.");
+    //     // Process merged chapters
+    //     foreach ($mergedChapters as $chapter) {
+    //         $chapter['url'] = json_encode($chapter['url']);
+    //         $this->info("{$manhwa->id} Processing chapter {$chapter['number']} from {$source}.");
 
-            $existingChapter = Chapter::where('manhwa_id', $manhwa->id)
-                ->where('chapter_number', $chapter['number'])
-                ->first();
-            if (!$existingChapter) {
-                Log::info("Adding new chapter {$chapter['number']} from {$source}.");
-                $newchapter = Chapter::create([
-                    'manhwa_id' => $manhwa->id,
-                    'chapter_number' => $chapter['number'],
-                    'link' => $chapter['url'],
-                    'source' => $source,
-                    'is_indexed' => false,
+    //         $existingChapter = Chapter::where('manhwa_id', $manhwa->id)
+    //             ->where('chapter_number', $chapter['number'])
+    //             ->first();
+    //         if (!$existingChapter) {
+    //             Log::info("Adding new chapter {$chapter['number']} from {$source}.");
+    //             $newchapter = Chapter::create([
+    //                 'manhwa_id' => $manhwa->id,
+    //                 'chapter_number' => $chapter['number'],
+    //                 'link' => $chapter['url'],
+    //                 'source' => $source,
+    //                 'is_indexed' => false,
 
-                ]);
+    //             ]);
 
-                if ($manhwa->post_id) {
-                    WpPostMeta::where('post_id', $manhwa->post_id)->where('meta_key', '_latest_update')->update([
-                        'meta_value' => Carbon::now()->timestamp
-                    ]);
-                    $chapterNumberFormatted = str_replace('.', '-', $chapter['number']);
-                    $slug = Str::slug("Chapter " . $chapterNumberFormatted);
-                    $chapterData = [
-                        "post_id" => $manhwa->post_id,
-                        "volume_id" => 0,
-                        "chapter_name" => "Chapter " . $chapter['number'],
-                        "chapter_name_extend" => "",
-                        "chapter_slug" => $slug,
-                        "storage_in_use" => "local",
-                        "date" => Carbon::now()->format('Y-m-d H:i:s'),
-                        "date_gmt" => Carbon::now()->format('Y-m-d H:i:s'),
-                        "chapter_index" => 0,
-                        "chapter_seo" => null,
-                        "chapter_warning" => null,
-                        "chapter_status" => 0,
-                        "chapter_metas" => ""
-                    ];
-                    $Wpchapter = WpMangaChapter::create($chapterData);
-                    $newchapter->wp_chapter_id = $Wpchapter->id;
-                    $newchapter->save();
-                }
-            } else {
-                Log::info("{$manhwa->id} Chapter {$chapter['number']} from {$source} already exists.");
-            }
-        }
-    }
+    //             if ($manhwa->post_id) {
+    //                 WpPostMeta::where('post_id', $manhwa->post_id)->where('meta_key', '_latest_update')->update([
+    //                     'meta_value' => Carbon::now()->timestamp
+    //                 ]);
+    //                 $chapterNumberFormatted = str_replace('.', '-', $chapter['number']);
+    //                 $slug = Str::slug("Chapter " . $chapterNumberFormatted);
+    //                 $chapterData = [
+    //                     "post_id" => $manhwa->post_id,
+    //                     "volume_id" => 0,
+    //                     "chapter_name" => "Chapter " . $chapter['number'],
+    //                     "chapter_name_extend" => "",
+    //                     "chapter_slug" => $slug,
+    //                     "storage_in_use" => "local",
+    //                     "date" => Carbon::now()->format('Y-m-d H:i:s'),
+    //                     "date_gmt" => Carbon::now()->format('Y-m-d H:i:s'),
+    //                     "chapter_index" => 0,
+    //                     "chapter_seo" => null,
+    //                     "chapter_warning" => null,
+    //                     "chapter_status" => 0,
+    //                     "chapter_metas" => ""
+    //                 ];
+    //                 $Wpchapter = WpMangaChapter::create($chapterData);
+    //                 $newchapter->wp_chapter_id = $Wpchapter->id;
+    //                 $newchapter->save();
+    //             }
+    //         } else {
+    //             Log::info("{$manhwa->id} Chapter {$chapter['number']} from {$source} already exists.");
+    //         }
+    //     }
+    // }
+
+    public function handleSecondaryChapter($manhwa, $chapter, $manhwa2, $chapter2,$chapterUrl,$chapterNumber)
+    {                         
+
+                                $chapterId2 = DB::connection('mysql2')->table('chapters')->insertGetId([
+                                    'manhwa_id' => $manhwa2->id,
+                                    'chapter_number' => $chapterNumber,
+                                    'source' => 'tecnoscans',
+                                    'is_indexed' => false,
+                                    'link' => $chapterUrl,
+                                    'wp_chapter_id' => null,
+                                    'created_at' => now(),
+                                    'updated_at' => now(),
+                                ]);
+
+                        if ($manhwa2->post_id) {
+                            DB::connection('wordpress2')->table('wp_postmeta')->where('post_id', $manhwa2->post_id)->where('meta_key', '_latest_update')->update([
+                                'meta_value' => Carbon::now()->timestamp
+                            ]);
+                            $chapterNumberFormatted = str_replace('.', '-', $chapterNumber);
+                            $slug = Str::slug("Chapter " . $chapterNumberFormatted);
+                            $chapterData = [
+                                "post_id" => $manhwa2->post_id,
+                                "volume_id" => 0,
+                                "chapter_name" => "Chapter " . $chapterNumber,
+                                "chapter_name_extend" => "",
+                                "chapter_slug" => $slug,
+                                "storage_in_use" => "local",
+                                "date" => Carbon::now()->format('Y-m-d H:i:s'),
+                                "date_gmt" => Carbon::now()->format('Y-m-d H:i:s'),
+                                "chapter_index" => 0,
+                                "chapter_seo" => null,
+                                "chapter_warning" => 'https://manhwacollection.com/'.Str::slug($manhwa2->name).'/'.$slug,
+                                "chapter_status" => 1,
+                                "chapter_metas" => ""
+                            ];
+                            $WpchapterId2 = DB::connection('wordpress2')->table('wp_manga_chapters')->insertGetId($chapterData);
+                            $chapter2 = DB::connection('mysql2')->table('chapters')->where('id', $chapterId2)->update([
+                                'wp_chapter_id' => $WpchapterId2
+                            ]);
+                            // dd($chapter2);                    
+                            Log::info("{$manhwa2->name} Added Secondary chapter {$chapterNumber} .");
+                            $this->info("{$manhwa2->name} Added Secondary chapter {$chapterNumber}.");
+                        }
+                        }
 }

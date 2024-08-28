@@ -51,10 +51,10 @@
 
                             <th>Name</th>
                             <th>ManhwaFast Link</th>
-                            <th>ManhwaClan Link</th>
+                            {{-- <th>ManhwaClan Link</th> --}}
                             <th>Tecnoscans Link</th>
-                            <th>Mgdemon Link</th>
-                            <th>Asura Link</th>
+                            <th>Post ID 2</th>
+                            {{-- <th>Asura Link</th> --}}
                             <th>Starting Limit</th>
 
                         </tr>
@@ -74,22 +74,22 @@
                                         {{ $manhwa->manhwafast_link }}
  
                                     </td>
-                                    <td>
+                                    {{-- <td>
                                         {{ $manhwa->manhwaclan_link }}
  
-                                    </td>
+                                    </td> --}}
                                     <td>
                                         {{ $manhwa->tecnoscans_link }}
  
                                     </td>
                                     <td>
-                                        {{ $manhwa->mgdemon_link }}
+                                        {{ $manhwa->post_id_2 }}
  
                                     </td>
-                                    <td>
+                                    {{-- <td>
                                         {{ $manhwa->asuracomic_link }}
  
-                                    </td>
+                                    </td> --}}
                                     <td>
                                         {{ $manhwa->starting_limit }}
  
